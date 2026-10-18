@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>나랑 데이트 할래?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFE6EE; --card:#FFFFFF; --ink:#33202E; --muted:#8A6C7E;
+  --cherry:#E8336D; --cherry-ink:#FFFFFF; --sky:#5DB7F5; --line:#F6C3D3; --chip:#FFF3F7;
+  color-scheme: light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#2A1722; --card:#3A2230; --ink:#FCE9F0; --muted:#C9A6B8;
+    --cherry:#FF5C8E; --cherry-ink:#2A1722; --sky:#7CC7FF; --line:#5A3447; --chip:#46293A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#2A1722; --card:#3A2230; --ink:#FCE9F0; --muted:#C9A6B8;
+  --cherry:#FF5C8E; --cherry-ink:#2A1722; --sky:#7CC7FF; --line:#5A3447; --chip:#46293A;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font-size:17px;line-height:1.6;overflow-x:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.wrap{width:100%;max-width:440px;padding:24px 20px;position:relative}
+.dots{display:flex;gap:6px;justify-content:center;margin-bottom:18px}
+.dots span{width:8px;height:8px;border-radius:50%;background:var(--line);transition:width .3s,background .3s}
+.dots span.on{width:22px;border-radius:4px;background:var(--cherry)}
+.card{
+  background:var(--card);border-radius:28px;padding:36px 26px 30px;
+  border:2px solid var(--line);text-align:center;position:relative;
+}
+.page{display:none}
+.page.active{display:block;animation:pop .35s ease-out}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+h1{font-family:"Jua","Apple SD Gothic Neo",sans-serif;font-weight:400;font-size:2rem;line-height:1.25;margin:0 0 10px}
+.big-emoji{font-size:4rem;line-height:1;margin-bottom:14px;display:block}
+p.sub{color:var(--muted);margin:0 0 26px}
+.btn{
+  font-family:"Jua",sans-serif;font-size:1.15rem;border:none;cursor:pointer;
+  padding:14px 28px;border-radius:999px;background:var(--cherry);color:var(--cherry-ink);
+  transition:transform .15s;
+}
+.btn:active{transform:scale(.95)}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.yn{display:flex;gap:14px;justify-content:center;align-items:center;min-height:64px}
+#noBtn{background:var(--chip);color:var(--muted);border:2px solid var(--line);transition:left .2s ease,top .2s ease}
+#noBtn.flee{position:fixed;z-index:50}
+.field{text-align:left;margin-bottom:16px}
+.field label{display:block;font-family:"Jua",sans-serif;font-size:1rem;margin-bottom:6px}
+input,select{
+  width:100%;font:inherit;color:var(--ink);background:var(--chip);
+  border:2px solid var(--line);border-radius:16px;padding:12px 14px;
+}
+.chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px}
+.chip{
+  font:inherit;cursor:pointer;padding:10px 16px;border-radius:999px;
+  background:var(--chip);color:var(--ink);border:2px solid var(--line);
+  transition:background .15s,border-color .15s,transform .15s;
+}
+.chip[aria-pressed="true"]{background:var(--cherry);border-color:var(--cherry);color:var(--cherry-ink);transform:rotate(-2deg)}
+.custom{margin-bottom:22px}
+.hint{font-size:.9rem;color:var(--muted);margin:-6px 0 18px}
+.nav{display:flex;gap:10px;justify-content:center}
+.letter{
+  text-align:left;background:var(--chip);border-radius:20px;padding:20px;
+  border:2px dashed var(--line);margin-bottom:22px
+}
+.letter p{margin:0 0 10px}
+.letter p:last-child{margin:0}
+.letter b{color:var(--cherry);font-weight:400;font-family:"Jua",sans-serif}
+.stack{display:flex;flex-direction:column;gap:10px}
+.toast{
+  position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.95rem;
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:100
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.fall{position:fixed;top:-60px;pointer-events:none;z-index:40;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(calc(100vh + 120px)) rotate(var(--r))}}
+@media (prefers-reduced-motion: reduce){
+  .page.active{animation:none}
+  #noBtn{transition:none}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="dots" id="dots" aria-hidden="true"></div>
+  <div class="card">
+
+    <!-- 1. 데이트 승낙 -->
+    <section class="page active" data-step="0">
+      <span class="big-emoji">💌</span>
+      <h1>나랑 데이트 할래?</h1>
+      <p class="sub">신중하게 골라줘</p>
+      <div class="yn">
+        <button class="btn" id="yesBtn">좋아!</button>
+        <button class="btn" id="noBtn">싫어</button>
+      </div>
+    </section>
+
+    <!-- 2. 고마워 -->
+    <section class="page" data-step="1">
+      <span class="big-emoji">🥰</span>
+      <h1>승낙해줘서 고마워!</h1>
+      <p class="sub">그럼 이제 약속 잡으러 가볼까?</p>
+      <button class="btn" data-next>약속 잡기</button>
+    </section>
+
+    <!-- 3. 날짜 및 시간 -->
+    <section class="page" data-step="2">
+      <span class="big-emoji">📅</span>
+      <h1>언제 만날까?</h1>
+      <p class="sub">편한 날로 골라줘</p>
+      <div class="field">
+        <label for="date">날짜</label>
+        <input type="date" id="date">
+      </div>
+      <div class="field">
+        <label for="time">시간</label>
+        <select id="time"></select>
+      </div>
+      <div class="nav">
+        <button class="btn ghost" data-prev>이전</button>
+        <button class="btn" id="dateNext" data-next disabled>다음</button>
+      </div>
+    </section>
+
+    <!-- 4. 활동 -->
+    <section class="page" data-step="3">
+      <span class="big-emoji">🎈</span>
+      <h1>뭐 하고 놀까?</h1>
+      <p class="hint">여러 개 골라도 돼</p>
+      <div class="chips" id="activityChips"></div>
+      <input class="custom" id="activityCustom" placeholder="다른 거 하고 싶으면 적어줘">
+      <div class="nav">
+        <button class="btn ghost" data-prev>이전</button>
+        <button class="btn" id="actNext" data-next disabled>다음</button>
+      </div>
+    </section>
+
+    <!-- 5. 메뉴 -->
+    <section class="page" data-step="4">
+      <span class="big-emoji">🍽️</span>
+      <h1>뭐 먹을까?</h1>
+      <p class="hint">먹고 싶은 거 다 골라줘</p>
+      <div class="chips" id="menuChips"></div>
+      <input class="custom" id="menuCustom" placeholder="다른 메뉴가 땡기면 적어줘">
+      <div class="nav">
+        <button class="btn ghost" data-prev>이전</button>
+        <button class="btn" id="menuNext" data-next disabled>다 골랐어</button>
+      </div>
+    </section>
+
+    <!-- 6. 메시지 -->
+    <section class="page" data-step="5">
+      <span class="big-emoji">💕</span>
+      <h1>약속 잡아줘서 기뻐!</h1>
+      <div class="letter" id="letter"></div>
+      <div class="stack">
+        <button class="btn" id="sendBtn">내 답변 보내기</button>
+        <button class="btn ghost" id="restartBtn">처음부터 다시하기</button>
+      </div>
+    </section>
+
+  </div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// ===== 여기만 바꾸면 돼 =====
+const ACTIVITIES = ["🎤 코노", "🧺 피크닉", "☕ 카공", "🚶 산책", "🎬 영화", "🖼️ 전시회"];
+const MENUS = ["🥩 고기", "🍝 파스타", "🍣 초밥", "🌶️ 떡볶이", "🍜 마라탕", "🍰 디저트"];
+const FALL_EMOJIS = ["💖", "💕", "🥰", "✨", "🌸", "💘"];
+const NO_TEXTS = ["싫어", "진짜?", "다시 생각해봐", "안 돼~", "잡아봐", "😝"];
+// ==========================
+
+const pages = [...document.querySelectorAll(".page")];
+const dotsEl = document.getElementById("dots");
+let step = 0;
+const state = { date: "", time: "", activities: new Set(), menus: new Set() };
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+pages.forEach(() => dotsEl.appendChild(document.createElement("span")));
+
+function go(n){
+  step = Math.max(0, Math.min(pages.length - 1, n));
+  pages.forEach((p, i) => p.classList.toggle("active", i === step));
+  [...dotsEl.children].forEach((d, i) => d.classList.toggle("on", i === step));
+  if (step === 1) rain(reduceMotion ? 12 : 45);
+  if (step === 5) { buildLetter(); rain(reduceMotion ? 6 : 20); }
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => go(step + 1)));
+document.querySelectorAll("[data-prev]").forEach(b => b.addEventListener("click", () => go(step - 1)));
+
+/* 1. 도망가는 싫어 버튼 */
+const noBtn = document.getElementById("noBtn");
+let noCount = 0;
+function flee(e){
+  if (e && e.cancelable) e.preventDefault();
+  const r = noBtn.getBoundingClientRect();
+  if (!noBtn.classList.contains("flee")) {
+    noBtn.style.left = r.left + "px";
+    noBtn.style.top = r.top + "px";
+    noBtn.classList.add("flee");
+  }
+  const pad = 16;
+  const maxX = window.innerWidth - r.width - pad;
+  const maxY = window.innerHeight - r.height - pad;
+  let x, y, tries = 0;
+  do {
+    x = pad + Math.random() * Math.max(0, maxX - pad);
+    y = pad + Math.random() * Math.max(0, maxY - pad);
+    tries++;
+  } while (Math.hypot(x - r.left, y - r.top) < 140 && tries < 20);
+  noBtn.style.left = x + "px";
+  noBtn.style.top = y + "px";
+  noCount++;
+  noBtn.textContent = NO_TEXTS[noCount % NO_TEXTS.length];
+}
+noBtn.addEventListener("pointerenter", flee);
+noBtn.addEventListener("touchstart", flee, { passive: false });
+noBtn.addEventListener("click", flee);
+noBtn.addEventListener("focus", flee);
+
+document.getElementById("yesBtn").addEventListener("click", () => {
+  noBtn.classList.remove("flee");
+  noBtn.style.left = noBtn.style.top = "";
+  go(1);
+});
+
+/* 2. 이모지 비 */
+function rain(count){
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const s = document.createElement("span");
+      s.className = "fall";
+      s.textContent = FALL_EMOJIS[Math.floor(Math.random() * FALL_EMOJIS.length)];
+      s.style.left = Math.random() * 100 + "vw";
+      s.style.fontSize = (18 + Math.random() * 26) + "px";
+      s.style.setProperty("--r", (Math.random() * 720 - 360) + "deg");
+      const dur = 2.5 + Math.random() * 2.5;
+      s.style.animationDuration = dur + "s";
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), dur * 1000 + 100);
+    }, i * 70);
+  }
+}
+
+/* 3. 날짜·시간 */
+const dateEl = document.getElementById("date");
+const timeEl = document.getElementById("time");
+const today = new Date();
+dateEl.min = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+timeEl.innerHTML = '<option value="">시간 선택</option>';
+for (let h = 10; h <= 21; h++) {
+  ["00", "30"].forEach(m => {
+    const label = `${h < 12 ? "오전" : "오후"} ${h > 12 ? h - 12 : h}시${m === "30" ? " 30분" : ""}`;
+    timeEl.insertAdjacentHTML("beforeend", `<option value="${label}">${label}</option>`);
+  });
+}
+function checkDate(){
+  state.date = dateEl.value; state.time = timeEl.value;
+  document.getElementById("dateNext").disabled = !(state.date && state.time);
+}
+dateEl.addEventListener("change", checkDate);
+timeEl.addEventListener("change", checkDate);
+
+/* 4·5. 칩 선택 */
+function makeChips(containerId, items, set, customId, nextId){
+  const box = document.getElementById(containerId);
+  const custom = document.getElementById(customId);
+  const next = document.getElementById(nextId);
+  const update = () => { next.disabled = set.size === 0 && !custom.value.trim(); };
+  items.forEach(label => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.type = "button"; b.textContent = label;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => {
+      const on = b.getAttribute("aria-pressed") !== "true";
+      b.setAttribute("aria-pressed", String(on));
+      on ? set.add(label) : set.delete(label);
+      update();
+    });
+    box.appendChild(b);
+  });
+  custom.addEventListener("input", update);
+}
+makeChips("activityChips", ACTIVITIES, state.activities, "activityCustom", "actNext");
+makeChips("menuChips", MENUS, state.menus, "menuCustom", "menuNext");
+
+/* 6. 메시지 */
+function listOf(set, customId){
+  const arr = [...set];
+  const c = document.getElementById(customId).value.trim();
+  if (c) arr.push(c);
+  return arr;
+}
+function prettyDate(v){
+  const d = new Date(v + "T00:00:00");
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  return `${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+}
+function esc(s){ return s.replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c])); }
+function summary(){
+  return {
+    when: `${prettyDate(state.date)} ${state.time}`,
+    acts: listOf(state.activities, "activityCustom").join(", "),
+    menus: listOf(state.menus, "menuCustom").join(", ")
+  };
+}
+function buildLetter(){
+  const s = summary();
+  document.getElementById("letter").innerHTML =
+    `<p><b>${esc(s.when)}</b>에 보자!</p>
+     <p>같이 <b>${esc(s.acts)}</b> 하고</p>
+     <p><b>${esc(s.menus)}</b> 먹으러 가자 😋</p>
+     <p>벌써 기다려진다 💕</p>`;
+}
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+document.getElementById("sendBtn").addEventListener("click", async () => {
+  const s = summary();
+  const text = `💌 데이트 답변\n📅 ${s.when}\n🎈 ${s.acts}\n🍽️ ${s.menus}\n기다릴게 💕`;
+  if (navigator.share) {
+    try { await navigator.share({ text }); return; } catch (e) { if (e.name === "AbortError") return; }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("답변을 복사했어! 카톡에 붙여넣어서 보내줘");
+  } catch (e) {
+    window.prompt("아래 내용을 복사해서 보내줘", text);
+  }
+});
+document.getElementById("restartBtn").addEventListener("click", () => {
+  state.activities.clear(); state.menus.clear();
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false"));
+  ["activityCustom", "menuCustom"].forEach(id => document.getElementById(id).value = "");
+  dateEl.value = ""; timeEl.value = ""; checkDate();
+  ["actNext", "menuNext"].forEach(id => document.getElementById(id).disabled = true);
+  noCount = 0; noBtn.textContent = NO_TEXTS[0];
+  go(0);
+});
+
+go(0);
+</script>
+</body>
+</html>
