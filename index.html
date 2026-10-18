@@ -180,6 +180,15 @@ input,select{
       </div>
     </section>
 
+    <!-- 결과 링크로 열었을 때 -->
+    <section class="page" data-step="6">
+      <span class="big-emoji">💌</span>
+      <h1>데이트 답장이 도착했어!</h1>
+      <p class="sub">이렇게 만나기로 했어</p>
+      <div class="letter" id="resultLetter"></div>
+      <button class="btn" id="goHome">처음 화면 보기</button>
+    </section>
+
   </div>
 </main>
 <div class="toast" id="toast" role="status"></div>
@@ -198,7 +207,7 @@ let step = 0;
 const state = { date: "", time: "", activities: new Set(), menus: new Set() };
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-pages.forEach(() => dotsEl.appendChild(document.createElement("span")));
+pages.slice(0, 6).forEach(() => dotsEl.appendChild(document.createElement("span")));
 
 function go(n){
   step = Math.max(0, Math.min(pages.length - 1, n));
@@ -206,6 +215,8 @@ function go(n){
   [...dotsEl.children].forEach((d, i) => d.classList.toggle("on", i === step));
   if (step === 1) rain(reduceMotion ? 12 : 45);
   if (step === 5) { buildLetter(); rain(reduceMotion ? 6 : 20); }
+  if (step === 6) rain(reduceMotion ? 12 : 45);
+  dotsEl.style.visibility = step === 6 ? "hidden" : "";
   window.scrollTo(0, 0);
 }
 document.querySelectorAll("[data-next]").forEach(b => b.addEventListener("click", () => go(step + 1)));
@@ -340,18 +351,32 @@ function toast(msg){
   t.textContent = msg; t.classList.add("show");
   setTimeout(() => t.classList.remove("show"), 2200);
 }
+/* 답변을 링크에 담기 (서버·시트 없이) */
+function encode(obj){
+  const b = btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+  return b.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function decode(str){
+  let b = str.replace(/-/g, "+").replace(/_/g, "/");
+  while (b.length % 4) b += "=";
+  return JSON.parse(decodeURIComponent(escape(atob(b))));
+}
 document.getElementById("sendBtn").addEventListener("click", async () => {
-  const s = summary();
-  const text = `💌 데이트 답변\n📅 ${s.when}\n🎈 ${s.acts}\n🍽️ ${s.menus}\n기다릴게 💕`;
+  const link = location.origin + location.pathname + "?r=" + encode(summary());
   if (navigator.share) {
-    try { await navigator.share({ text }); return; } catch (e) { if (e.name === "AbortError") return; }
+    try { await navigator.share({ title: "데이트 답장 💌", text: "내 답장이야, 눌러봐 💌", url: link }); return; }
+    catch (e) { if (e.name === "AbortError") return; }
   }
   try {
-    await navigator.clipboard.writeText(text);
-    toast("답변을 복사했어! 카톡에 붙여넣어서 보내줘");
+    await navigator.clipboard.writeText(link);
+    toast("답장 링크를 복사했어! 카톡에 붙여넣어서 보내줘");
   } catch (e) {
-    window.prompt("아래 내용을 복사해서 보내줘", text);
+    window.prompt("아래 링크를 복사해서 보내줘", link);
   }
+});
+document.getElementById("goHome").addEventListener("click", () => {
+  history.replaceState(null, "", location.pathname);
+  go(0);
 });
 document.getElementById("restartBtn").addEventListener("click", () => {
   state.activities.clear(); state.menus.clear();
@@ -363,7 +388,21 @@ document.getElementById("restartBtn").addEventListener("click", () => {
   go(0);
 });
 
-go(0);
+const resultCode = new URLSearchParams(location.search).get("r");
+let shownResult = false;
+if (resultCode) {
+  try {
+    const s = decode(resultCode);
+    document.getElementById("resultLetter").innerHTML =
+      `<p>📅 <b>${esc(s.when)}</b></p>
+       <p>🎈 <b>${esc(s.acts)}</b></p>
+       <p>🍽️ <b>${esc(s.menus)}</b></p>
+       <p>기다릴게 💕</p>`;
+    go(6);
+    shownResult = true;
+  } catch (e) {}
+}
+if (!shownResult) go(0);
 </script>
 </body>
 </html>
